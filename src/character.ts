@@ -80,20 +80,20 @@ export async function createCharacter({ app, onMove }: CreateCharacterArgs) {
       character.texture = animation[textureId % animationDuration];
     }
 
-    if (movement.left) {
-      offsetX -= speed;
-      lastDirection = 'left';
-    } else if (movement.right) {
-      offsetX += speed;
-      lastDirection = 'right';
-    }
-
     if (movement.up) {
       offsetY -= speed;
       lastDirection = 'up';
     } else if (movement.down) {
       offsetY += speed;
       lastDirection = 'down';
+    }
+
+    if (movement.left) {
+      offsetX -= speed;
+      lastDirection = 'left';
+    } else if (movement.right) {
+      offsetX += speed;
+      lastDirection = 'right';
     }
 
     if (moving()) {
