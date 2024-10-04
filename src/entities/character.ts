@@ -1,36 +1,55 @@
-import { Sprite } from 'pixi.js';
-import type { Application, Renderer } from 'pixi.js';
+import { MovableEntity } from './entity.ts';
+import type { BaseInitArgs } from './entity.ts';
 
-import { Movement } from '../utils/movement.ts';
-import { parseTileset } from '../engine/tileset.ts';
-
-export type InitCharacterArgs = {
-  app: Application<Renderer>;
-  onMove: (x: number, y: number) => void;
+export type InitCharacterArgs = Pick<BaseInitArgs, 'app'> & {
+  onMove?: (x: number, y: number) => void;
 };
 
-export class Character {
-  private initialized = false;
-  private animationDuration = 6;
-  private speed = 3;
+export class Character extends MovableEntity {
+  private onMove!: (x: number, y: number) => void;
 
-  private movement = new Movement({
-    w: 'up',
-    a: 'left',
-    s: 'down',
-    d: 'right',
-  });
+  constructor() {
+    super({
+      keys: {
+        w: 'up',
+        a: 'left',
+        s: 'down',
+        d: 'right',
+      },
+      speed: 3,
+      animationDelay: 100,
+      verticalAnimation: true,
+    });
+  }
 
-  private x: number = 0;
-  private y: number = 0;
+  protected updatePosition() {
+    this.onMove(this.x, this.y);
+  }
+
+  setPosition(_x: number, _y: number): void {
+    console.warn(`setPosition should not be called on Character`);
+  }
 
   async init({ app, onMove }: InitCharacterArgs) {
-    const characterSpritesheet = await parseTileset({
+    const width = 312;
+    const height = 176;
+    const rowSize = 12;
+    const columnSize = 4;
+
+    const tileWidth = width / rowSize;
+    const tileHeight = height / columnSize;
+    const initialX = (app.screen.width - tileWidth) / 2;
+    const initialY = (app.screen.height - tileHeight) / 2;
+
+    await this.initBase({
+      app,
+      initialX,
+      initialY,
       fileName: 'character',
-      width: 312,
-      height: 176,
-      rowSize: 12,
-      columnSize: 4,
+      width,
+      height,
+      rowSize,
+      columnSize,
       names: [
         'standingLeft',
         'runningLeft',
@@ -41,71 +60,9 @@ export class Character {
         'standingUp',
         'runningUp',
       ],
-      animationDuration: this.animationDuration,
+      animationDuration: 6,
     });
 
-    let lastDirection: 'up' | 'left' | 'right' | 'down' = 'down';
-
-    let textureId = 0;
-    let animation = characterSpritesheet.animations.standingDown;
-
-    const updateAnimation = () => {
-      const action = this.movement.isMoving() ? 'running' : 'standing';
-      switch (lastDirection) {
-        case 'down':
-          animation = characterSpritesheet.animations[`${action}Down`];
-          break;
-        case 'left':
-          animation = characterSpritesheet.animations[`${action}Left`];
-          break;
-        case 'right':
-          animation = characterSpritesheet.animations[`${action}Right`];
-          break;
-        case 'up':
-          animation = characterSpritesheet.animations[`${action}Up`];
-          break;
-      }
-    };
-
-    const character = new Sprite(animation[0]);
-    character.x = app.screen.width / 2 - 16 / 2;
-    character.y = app.screen.height / 2 - 16 / 2;
-    app.stage.addChild(character);
-
-    let elapsed = 0;
-    app.ticker.add(({ deltaMS }) => {
-      elapsed += deltaMS;
-      if (elapsed > 100) {
-        elapsed = 0;
-        textureId += 1;
-        character.texture = animation[textureId % this.animationDuration];
-      }
-
-      if (this.movement.state.up) {
-        this.y -= this.speed;
-        lastDirection = 'up';
-      } else if (this.movement.state.down) {
-        this.y += this.speed;
-        lastDirection = 'down';
-      }
-
-      if (this.movement.state.left) {
-        this.x -= this.speed;
-        lastDirection = 'left';
-      } else if (this.movement.state.right) {
-        this.x += this.speed;
-        lastDirection = 'right';
-      }
-
-      if (this.movement.isMoving()) {
-        onMove(this.x, this.y);
-      }
-
-      updateAnimation();
-    });
-
-    this.initialized = true;
+    this.onMove = onMove ?? (() => {});
   }
-
-  constructor() {}
 }

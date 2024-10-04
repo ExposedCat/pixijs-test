@@ -38,8 +38,6 @@ export class GameMap {
         const tile = tiles[y / 16]?.[x / 16];
         if (tile) {
           this.tilemap.tile(tileset.textures[`${tile}0`], x, y);
-        } else {
-          console.log('Not found', x / 16, y / 16);
         }
       }
     }
