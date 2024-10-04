@@ -37,8 +37,6 @@ export async function parseTileset({
   const tileWidth = width / rowSize;
   const tileHeight = height / columnSize;
 
-  console.log(tileWidth, tileHeight);
-
   for (let y = 0; y < height; y += tileHeight) {
     for (let x = 0; x < width; x += tileWidth) {
       const globalNumber = x / tileWidth + 1 + (y / tileHeight) * rowSize - 1;
@@ -58,8 +56,6 @@ export async function parseTileset({
       };
     }
   }
-
-  console.log(atlas);
 
   const spritesheet = new Spritesheet(Texture.from(atlas.meta.image!), atlas);
   await spritesheet.parse();

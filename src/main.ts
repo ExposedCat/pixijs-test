@@ -1,7 +1,7 @@
-import { initPixiApp } from './pixi.ts';
-import { createMap } from './map.ts';
-import { createCharacter } from './character.ts';
-import { createAnimal } from './animal.ts';
+import { GameMap } from './entities/game-map.ts';
+import { Character } from './entities/character.ts';
+import { Animal } from './entities/animal.ts';
+import { initPixiApp } from './engine/pixi.ts';
 
 const root = document.querySelector<HTMLDivElement>('#root');
 if (!root) {
@@ -15,13 +15,17 @@ const app = await initPixiApp({
 
 root.appendChild(app.canvas);
 
-const map = await createMap({
+const map = new GameMap();
+const pig = new Animal();
+const player = new Character();
+
+await map.init({
   app,
   width: app.screen.width * 2,
   height: app.screen.height * 2,
 });
 
-const pig = await createAnimal({
+await pig.init({
   app,
   initialX: 500,
   initialY: 500,
@@ -30,10 +34,14 @@ const pig = await createAnimal({
   height: 64,
 });
 
-await createCharacter({
+const npcs = [pig];
+
+await player.init({
   app,
   onMove: (x, y) => {
-    pig.shift(x, y);
     map.move(x, y);
+    for (const npc of npcs) {
+      npc.setOffset(x, y);
+    }
   },
 });
