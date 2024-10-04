@@ -4,9 +4,11 @@ import type { Spritesheet, SpritesheetData, Texture, TextureSource, Application,
 import { Movement } from '../utils/movement.ts';
 import type { MovementArgs } from '../utils/movement.ts';
 import { parseTileset, type ParseTileSheetArgs } from '../engine/tileset.ts';
+import type { GameState } from './state.ts';
 
 export type InitEntityArgs = ParseTileSheetArgs & {
   app: Application<Renderer>;
+  state: GameState;
   initialX: number;
   initialY: number;
 };
@@ -25,16 +27,17 @@ export class MovableEntity {
   protected animationDelay!: number;
   protected verticalAnimation!: boolean;
 
+  protected state!: GameState;
+
   protected movement: Movement | null = null;
 
   protected sprite!: Sprite;
   protected spriteSheet!: Spritesheet<SpritesheetData>;
 
-  protected x = 0;
-  protected y = 0;
-
-  protected offsetX = 0;
-  protected offsetY = 0;
+  x = 0;
+  y = 0;
+  width = 0;
+  height = 0;
 
   protected lastDirection: 'left' | 'right' | 'up' | 'down' = 'left';
   protected animation!: Texture<TextureSource<any>>[];
@@ -65,16 +68,38 @@ export class MovableEntity {
     }
   }
 
-  protected updatePosition() {
-    this.sprite.x = this.x - this.offsetX;
-    this.sprite.y = this.y - this.offsetY;
+  updatePosition() {
+    this.sprite.x = this.virtualX;
+    this.sprite.y = this.virtualY;
   }
 
-  protected async initBase({ app, initialX, initialY, ...tilesetArgs }: InitEntityArgs) {
+  get virtualX() {
+    return this.x - this.state.offsetX;
+  }
+
+  get virtualY() {
+    return this.y - this.state.offsetY;
+  }
+
+  protected canMove(changeX: number, changeY: number) {
+    return (
+      this.x + changeX > 0 &&
+      this.state.map.width > this.x + changeX + this.width &&
+      this.y + changeY > 0 &&
+      this.state.map.height > this.y + changeY + this.height &&
+      !this.state.movableCollides(this, this.x + changeX, this.y + changeY)
+    );
+  }
+
+  protected async initBase({ app, initialX, initialY, state, ...tilesetArgs }: InitEntityArgs) {
+    this.state = state;
+
     this.x = initialX;
     this.y = initialY;
 
     this.spriteSheet = await parseTileset({ ...tilesetArgs });
+    this.width = tilesetArgs.width / tilesetArgs.rowSize;
+    this.height = tilesetArgs.height / tilesetArgs.columnSize;
 
     let textureId = 0;
     this.animation = this.spriteSheet.animations.standingLeft;
@@ -95,18 +120,18 @@ export class MovableEntity {
 
       if (this.movement) {
         if (this.movement.state.up) {
-          this.y -= this.speed;
+          if (this.canMove(0, -this.speed)) this.y -= this.speed;
           if (this.verticalAnimation) this.lastDirection = 'up';
         } else if (this.movement.state.down) {
-          this.y += this.speed;
+          if (this.canMove(0, this.speed)) this.y += this.speed;
           if (this.verticalAnimation) this.lastDirection = 'down';
         }
 
         if (this.movement.state.left) {
-          this.x -= this.speed;
+          if (this.canMove(-this.speed, 0)) this.x -= this.speed;
           this.lastDirection = 'left';
         } else if (this.movement.state.right) {
-          this.x += this.speed;
+          if (this.canMove(this.speed, 0)) this.x += this.speed;
           this.lastDirection = 'right';
         }
       }
@@ -114,11 +139,6 @@ export class MovableEntity {
       this.updateAnimation();
       this.updatePosition();
     });
-  }
-
-  setOffset(x: number, y: number) {
-    this.offsetX = x;
-    this.offsetY = y;
   }
 
   setPosition(x: number, y: number) {

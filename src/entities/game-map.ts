@@ -13,7 +13,13 @@ export type CreateMapArgs = {
 export class GameMap {
   private tilemap!: CompositeTilemap;
 
+  width: number = 0;
+  height: number = 0;
+
   async init({ width, height, app }: CreateMapArgs) {
+    this.width = width;
+    this.height = height;
+
     const tileset = await parseTileset({
       fileName: 'background',
       width: 64,

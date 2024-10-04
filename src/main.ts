@@ -1,3 +1,4 @@
+import { GameState } from './entities/state.ts';
 import { GameMap } from './entities/game-map.ts';
 import { Character } from './entities/character.ts';
 import { Animal } from './entities/animal.ts';
@@ -19,6 +20,12 @@ const map = new GameMap();
 const pig = new Animal();
 const player = new Character();
 
+const state = new GameState({
+  map,
+  player,
+  movables: [pig],
+});
+
 await map.init({
   app,
   width: app.screen.width * 2,
@@ -27,6 +34,7 @@ await map.init({
 
 await pig.init({
   app,
+  state,
   initialX: 500,
   initialY: 500,
   fileName: 'pig',
@@ -34,14 +42,8 @@ await pig.init({
   height: 64,
 });
 
-const npcs = [pig];
-
 await player.init({
   app,
-  onMove: (x, y) => {
-    map.move(x, y);
-    for (const npc of npcs) {
-      npc.setOffset(x, y);
-    }
-  },
+  state,
+  onMove: state.handleMovement.bind(state),
 });
