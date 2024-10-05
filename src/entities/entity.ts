@@ -119,20 +119,42 @@ export class MovableEntity {
       }
 
       if (this.movement) {
+        let deltaX = 0;
+        let deltaY = 0;
+
         if (this.movement.state.up) {
-          if (this.canMove(0, -this.speed)) this.y -= this.speed;
+          deltaY -= this.speed;
           if (this.verticalAnimation) this.lastDirection = 'up';
         } else if (this.movement.state.down) {
-          if (this.canMove(0, this.speed)) this.y += this.speed;
+          deltaY += this.speed;
           if (this.verticalAnimation) this.lastDirection = 'down';
         }
-
         if (this.movement.state.left) {
-          if (this.canMove(-this.speed, 0)) this.x -= this.speed;
+          deltaX -= this.speed;
           this.lastDirection = 'left';
         } else if (this.movement.state.right) {
-          if (this.canMove(this.speed, 0)) this.x += this.speed;
+          deltaX += this.speed;
           this.lastDirection = 'right';
+        }
+
+        if (deltaX !== 0 && deltaY !== 0) {
+          const factor = 1 / Math.sqrt(2);
+          deltaX *= factor;
+          deltaY *= factor;
+        }
+
+        if (deltaX !== 0 || deltaY !== 0) {
+          if (this.canMove(deltaX, deltaY)) {
+            this.x += deltaX;
+            this.y += deltaY;
+          } else {
+            if (deltaX !== 0 && this.canMove(deltaX, 0)) {
+              this.x += deltaX;
+            }
+            if (deltaY !== 0 && this.canMove(0, deltaY)) {
+              this.y += deltaY;
+            }
+          }
         }
       }
 
