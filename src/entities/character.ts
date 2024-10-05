@@ -25,13 +25,20 @@ export class Character extends MovableEntity {
     });
   }
 
-  protected canMove(x: number, y: number) {
+  protected canMove(changeX: number, changeY: number) {
+    const x = this.x + changeX + this.hitbox.offsetX;
+    const y = this.y + changeY + this.hitbox.offsetY;
+    const { width, height } = this.hitbox;
     return (
-      this.x + x > 0 &&
-      this.state.map.width > this.x + x + this.width &&
-      this.y + y > 0 &&
-      this.state.map.height > this.y + y + this.height &&
-      !this.state.playerCollides(this, this.initialX + x, this.initialY + y)
+      x > 0 &&
+      this.state.map.width > x + width &&
+      y > 0 &&
+      this.state.map.height > y + height &&
+      !this.state.playerCollides(
+        this,
+        this.initialX + changeX + this.hitbox.offsetX,
+        this.initialY + changeY + this.hitbox.offsetY,
+      )
     );
   }
 
@@ -74,6 +81,12 @@ export class Character extends MovableEntity {
         'runningUp',
       ],
       animationDuration: 6,
+      hitbox: {
+        offsetX: 6,
+        offsetY: 24,
+        width: 14,
+        height: 12,
+      },
     });
 
     this.onMove = onMove ?? (() => {});

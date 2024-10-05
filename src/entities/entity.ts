@@ -6,11 +6,19 @@ import type { MovementArgs } from '../utils/movement.ts';
 import { parseTileset, type ParseTileSheetArgs } from '../engine/tileset.ts';
 import type { GameState } from './state.ts';
 
+export type HitBox = {
+  offsetX: number;
+  offsetY: number;
+  width: number;
+  height: number;
+};
+
 export type InitEntityArgs = ParseTileSheetArgs & {
   app: Application<Renderer>;
   state: GameState;
   initialX: number;
   initialY: number;
+  hitbox: HitBox;
 };
 
 export type BaseInitArgs = Omit<InitEntityArgs, 'rowSize' | 'columnSize' | 'names' | 'animationDuration'>;
@@ -31,16 +39,18 @@ export class MovableEntity {
 
   protected movement: Movement | null = null;
 
-  protected sprite!: Sprite;
   protected spriteSheet!: Spritesheet<SpritesheetData>;
+
+  protected lastDirection: 'left' | 'right' | 'up' | 'down' = 'left';
+  protected animation!: Texture<TextureSource<any>>[];
+
+  sprite!: Sprite;
 
   x = 0;
   y = 0;
   width = 0;
   height = 0;
-
-  protected lastDirection: 'left' | 'right' | 'up' | 'down' = 'left';
-  protected animation!: Texture<TextureSource<any>>[];
+  hitbox!: HitBox;
 
   constructor({ keys, ...rest }: MovableEntityArgs) {
     if (keys) {
@@ -82,20 +92,24 @@ export class MovableEntity {
   }
 
   protected canMove(changeX: number, changeY: number) {
+    const x = this.x + changeX + this.hitbox.offsetX;
+    const y = this.y + changeY + this.hitbox.offsetY;
+    const { width, height } = this.hitbox;
     return (
-      this.x + changeX > 0 &&
-      this.state.map.width > this.x + changeX + this.width &&
-      this.y + changeY > 0 &&
-      this.state.map.height > this.y + changeY + this.height &&
-      !this.state.movableCollides(this, this.x + changeX, this.y + changeY)
+      x > 0 &&
+      this.state.map.width > x + width &&
+      y > 0 &&
+      this.state.map.height > y + height &&
+      !this.state.movableCollides(this, x, y)
     );
   }
 
-  protected async initBase({ app, initialX, initialY, state, ...tilesetArgs }: InitEntityArgs) {
+  protected async initBase({ app, initialX, initialY, state, hitbox, ...tilesetArgs }: InitEntityArgs) {
     this.state = state;
 
     this.x = initialX;
     this.y = initialY;
+    this.hitbox = hitbox;
 
     this.spriteSheet = await parseTileset({ ...tilesetArgs });
     this.width = tilesetArgs.width / tilesetArgs.rowSize;

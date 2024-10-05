@@ -21,6 +21,7 @@ const pig = new Animal();
 const player = new Character();
 
 const state = new GameState({
+  app,
   map,
   player,
   movables: [pig],
@@ -40,6 +41,12 @@ await pig.init({
   fileName: 'pig',
   width: 168,
   height: 64,
+  hitbox: {
+    offsetX: 12,
+    offsetY: 8,
+    height: 16,
+    width: 24,
+  },
 });
 
 await player.init({
