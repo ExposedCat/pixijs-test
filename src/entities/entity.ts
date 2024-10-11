@@ -91,16 +91,33 @@ export class MovableEntity {
     return this.y - this.state.offsetY;
   }
 
+  protected collides(newX: number, newY: number) {
+    const movableCollision = this.state.movables.some(movable => {
+      return (
+        movable !== this &&
+        newX < movable.x + movable.hitbox.offsetX + movable.hitbox.width &&
+        newX + this.hitbox.width > movable.x + movable.hitbox.offsetX &&
+        newY < movable.y + movable.hitbox.offsetY + movable.hitbox.height &&
+        newY + this.hitbox.height > movable.y + movable.hitbox.offsetY
+      );
+    });
+
+    const player = this.state.player;
+    const playerCollision =
+      newX < player.x + player.hitbox.offsetX + player.hitbox.width &&
+      newX + this.hitbox.width > player.x + player.hitbox.offsetX &&
+      newY < player.y + player.hitbox.offsetY + player.hitbox.height &&
+      newY + this.hitbox.height > player.y + player.hitbox.offsetY;
+
+    return movableCollision || playerCollision;
+  }
+
   protected canMove(changeX: number, changeY: number) {
     const x = this.x + changeX + this.hitbox.offsetX;
     const y = this.y + changeY + this.hitbox.offsetY;
     const { width, height } = this.hitbox;
     return (
-      x > 0 &&
-      this.state.map.width > x + width &&
-      y > 0 &&
-      this.state.map.height > y + height &&
-      !this.state.movableCollides(this, x, y)
+      x > 0 && this.state.map.width > x + width && y > 0 && this.state.map.height > y + height && !this.collides(x, y)
     );
   }
 

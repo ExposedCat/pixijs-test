@@ -25,6 +25,17 @@ export class Character extends MovableEntity {
     });
   }
 
+  protected collides(newX: number, newY: number) {
+    return this.state.movables.some(movable => {
+      return (
+        newX < movable.virtualX + movable.hitbox.offsetX + movable.hitbox.width &&
+        newX + this.hitbox.width > movable.virtualX + movable.hitbox.offsetX &&
+        newY < movable.virtualY + movable.hitbox.offsetY + movable.hitbox.height &&
+        newY + this.hitbox.height > movable.virtualY + movable.hitbox.offsetY
+      );
+    });
+  }
+
   protected canMove(changeX: number, changeY: number) {
     const x = this.x + changeX + this.hitbox.offsetX;
     const y = this.y + changeY + this.hitbox.offsetY;
@@ -34,11 +45,7 @@ export class Character extends MovableEntity {
       this.state.map.width > x + width &&
       y > 0 &&
       this.state.map.height > y + height &&
-      !this.state.playerCollides(
-        this,
-        this.initialX + changeX + this.hitbox.offsetX,
-        this.initialY + changeY + this.hitbox.offsetY,
-      )
+      !this.collides(this.initialX + changeX + this.hitbox.offsetX, this.initialY + changeY + this.hitbox.offsetY)
     );
   }
 

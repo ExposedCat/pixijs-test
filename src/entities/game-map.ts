@@ -3,9 +3,11 @@ import { CompositeTilemap } from '@pixi/tilemap';
 
 import { randomInt } from '../utils/math.ts';
 import { parseTileset } from '../engine/tileset.ts';
+import type { GameState } from './state.ts';
 
 export type CreateMapArgs = {
   app: Application<Renderer>;
+  state: GameState;
   width: number;
   height: number;
 };
@@ -16,7 +18,7 @@ export class GameMap {
   width: number = 0;
   height: number = 0;
 
-  async init({ width, height, app }: CreateMapArgs) {
+  async init({ width, height, app, state }: CreateMapArgs) {
     this.width = width;
     this.height = height;
 
@@ -47,6 +49,8 @@ export class GameMap {
         }
       }
     }
+
+    app.ticker.add(() => this.move(state.offsetX, state.offsetY));
 
     app.stage.addChild(this.tilemap);
   }
