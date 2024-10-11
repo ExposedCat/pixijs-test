@@ -29,6 +29,7 @@ const state = new GameState({
 
 await map.init({
   app,
+  state,
   width: app.screen.width * 2,
   height: app.screen.height * 2,
 });

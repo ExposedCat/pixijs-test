@@ -93,7 +93,7 @@ export class MovableEntity {
   }
 
   protected updateAnimation(deltaMS: number) {
-    this.animationDuration += deltaMS;
+    this.animationTime += deltaMS;
     if (this.animationTime > this.animationDelay) {
       this.animationTime = 0;
       this.textureId += 1;
@@ -163,6 +163,22 @@ export class MovableEntity {
     this.sprite.y = this.virtualY;
   }
 
+  protected updateVisibility() {
+    const playerOffsetX = this.state.player.width / 2;
+    const playerOffsetY = this.state.player.height / 2;
+    const playerX = this.state.player.x + playerOffsetX;
+    const playerY = this.state.player.y + playerOffsetY;
+
+    const selfOffsetX = this.width / 2;
+    const selfOffsetY = this.height / 2;
+    const selfX = this.x + selfOffsetX;
+    const selfY = this.y + selfOffsetY;
+
+    this.sprite.visible =
+      Math.abs(playerY - selfY) <= this.state.player.initialY + playerOffsetY + selfOffsetY &&
+      Math.abs(playerX - selfX) <= this.state.player.initialX + playerOffsetX + selfOffsetX;
+  }
+
   protected async initBase({ app, initialX, initialY, state, hitbox, ...tilesetArgs }: InitEntityArgs) {
     this.state = state;
 
@@ -183,8 +199,11 @@ export class MovableEntity {
 
     app.ticker.add(({ deltaMS }) => {
       this.updateMovement();
-      this.updateAnimation(deltaMS);
-      this.updatePosition();
+      if (this.sprite.visible) {
+        this.updateAnimation(deltaMS);
+        this.updatePosition();
+      }
+      this.updateVisibility();
     });
 
     app.stage.addChild(this.sprite);

@@ -53,6 +53,8 @@ export class Character extends MovableEntity {
     this.onMove(this.x - this.initialX, this.y - this.initialY);
   }
 
+  protected updateVisibility() {}
+
   async init({ app, state, onMove }: InitCharacterArgs) {
     const width = 312;
     const height = 176;
