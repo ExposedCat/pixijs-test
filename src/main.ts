@@ -1,6 +1,7 @@
 import { GameState } from './entities/state.ts';
+import { Player } from './entities/player.ts';
+import { createPlant } from './entities/generator.ts';
 import { GameMap } from './entities/game-map.ts';
-import { Character } from './entities/character.ts';
 import { Animal } from './entities/animal.ts';
 import { initPixiApp } from './engine/pixi.ts';
 
@@ -18,13 +19,13 @@ root.appendChild(app.canvas);
 
 const map = new GameMap();
 const pig = new Animal();
-const player = new Character();
+const player = new Player();
 
 const state = new GameState({
   app,
   map,
   player,
-  movables: [pig],
+  entities: [pig],
 });
 
 await map.init({
@@ -55,3 +56,5 @@ await player.init({
   state,
   onMove: state.handleMovement.bind(state),
 });
+
+setInterval(() => createPlant(state), 1_000);

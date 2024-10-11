@@ -1,5 +1,10 @@
-import { MovableEntity } from './entity.ts';
-import type { BaseInitArgs } from './entity.ts';
+import { MovableEntity } from './movable-entity.ts';
+import type { InitMovableEntityArgs } from './movable-entity.ts';
+
+export type InitAnimalArgs = Omit<
+  InitMovableEntityArgs,
+  'hp' | 'rowSize' | 'columnSize' | 'names' | 'animationDuration'
+>;
 
 export class Animal extends MovableEntity {
   constructor() {
@@ -16,9 +21,10 @@ export class Animal extends MovableEntity {
     });
   }
 
-  async init(args: BaseInitArgs) {
-    return this.initBase({
+  async init(args: InitAnimalArgs) {
+    return this.initMovable({
       ...args,
+      hp: 30,
       rowSize: 4,
       columnSize: 2,
       names: ['standingLeft', 'standingRight', 'runningLeft', 'runningRight'],

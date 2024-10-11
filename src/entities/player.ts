@@ -1,11 +1,11 @@
-import { MovableEntity } from './entity.ts';
-import type { BaseInitArgs } from './entity.ts';
+import { MovableEntity } from './movable-entity.ts';
+import type { InitMovableEntityArgs } from './movable-entity.ts';
 
-export type InitCharacterArgs = Pick<BaseInitArgs, 'app' | 'state'> & {
+export type InitCharacterArgs = Pick<InitMovableEntityArgs, 'app' | 'state'> & {
   onMove?: (x: number, y: number) => void;
 };
 
-export class Character extends MovableEntity {
+export class Player extends MovableEntity {
   private onMove!: (x: number, y: number) => void;
 
   initialX!: number;
@@ -25,13 +25,13 @@ export class Character extends MovableEntity {
     });
   }
 
-  protected collides(newX: number, newY: number) {
-    return this.state.movables.some(movable => {
+  private collides(newX: number, newY: number) {
+    return this.state.entities.some(entity => {
       return (
-        newX < movable.virtualX + movable.hitbox.offsetX + movable.hitbox.width &&
-        newX + this.hitbox.width > movable.virtualX + movable.hitbox.offsetX &&
-        newY < movable.virtualY + movable.hitbox.offsetY + movable.hitbox.height &&
-        newY + this.hitbox.height > movable.virtualY + movable.hitbox.offsetY
+        newX < entity.virtualX + entity.hitbox.offsetX + entity.hitbox.width &&
+        newX + this.hitbox.width > entity.virtualX + entity.hitbox.offsetX &&
+        newY < entity.virtualY + entity.hitbox.offsetY + entity.hitbox.height &&
+        newY + this.hitbox.height > entity.virtualY + entity.hitbox.offsetY
       );
     });
   }
@@ -66,7 +66,8 @@ export class Character extends MovableEntity {
     this.initialX = (app.screen.width - tileWidth) / 2;
     this.initialY = (app.screen.height - tileHeight) / 2;
 
-    await this.initBase({
+    await this.initMovable({
+      hp: 100,
       state,
       app,
       initialX: this.initialX,

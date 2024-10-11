@@ -1,27 +1,14 @@
-import { Sprite } from 'pixi.js';
-import type { Spritesheet, SpritesheetData, Texture, TextureSource, Application, Renderer } from 'pixi.js';
+import type { Texture, TextureSource, Application, Renderer } from 'pixi.js';
 
 import { Movement } from '../utils/movement.ts';
 import type { MovementArgs } from '../utils/movement.ts';
-import { parseTileset, type ParseTileSheetArgs } from '../engine/tileset.ts';
-import type { GameState } from './state.ts';
+import { collides } from '../utils/geometry.ts';
+import { BaseEntity } from './base-entity.ts';
+import type { InitBaseEntityArgs } from './base-entity.ts';
 
-export type HitBox = {
-  offsetX: number;
-  offsetY: number;
-  width: number;
-  height: number;
-};
-
-export type InitEntityArgs = ParseTileSheetArgs & {
+export type InitMovableEntityArgs = InitBaseEntityArgs & {
   app: Application<Renderer>;
-  state: GameState;
-  initialX: number;
-  initialY: number;
-  hitbox: HitBox;
 };
-
-export type BaseInitArgs = Omit<InitEntityArgs, 'rowSize' | 'columnSize' | 'names' | 'animationDuration'>;
 
 export type MovableEntityArgs = {
   speed: number;
@@ -30,10 +17,8 @@ export type MovableEntityArgs = {
   animationDelay?: number;
 };
 
-export class MovableEntity {
+export class MovableEntity extends BaseEntity {
   protected speed!: number;
-
-  protected state!: GameState;
 
   protected movement: Movement | null = null;
   protected lastDirection: 'left' | 'right' | 'up' | 'down' = 'left';
@@ -45,16 +30,8 @@ export class MovableEntity {
   protected animationTime = 0;
   protected textureId = 0;
 
-  protected spriteSheet!: Spritesheet<SpritesheetData>;
-  sprite!: Sprite;
-
-  x = 0;
-  y = 0;
-  width = 0;
-  height = 0;
-  hitbox!: HitBox;
-
   constructor({ keys, ...rest }: MovableEntityArgs) {
+    super();
     if (keys) {
       this.movement = new Movement(keys);
     }
@@ -62,33 +39,22 @@ export class MovableEntity {
     this.animationDelay ??= 250;
   }
 
-  protected collides(newX: number, newY: number) {
-    const movableCollision = this.state.movables.some(movable => {
-      return (
-        movable !== this &&
-        newX < movable.x + movable.hitbox.offsetX + movable.hitbox.width &&
-        newX + this.hitbox.width > movable.x + movable.hitbox.offsetX &&
-        newY < movable.y + movable.hitbox.offsetY + movable.hitbox.height &&
-        newY + this.hitbox.height > movable.y + movable.hitbox.offsetY
-      );
-    });
-
-    const player = this.state.player;
-    const playerCollision =
-      newX < player.x + player.hitbox.offsetX + player.hitbox.width &&
-      newX + this.hitbox.width > player.x + player.hitbox.offsetX &&
-      newY < player.y + player.hitbox.offsetY + player.hitbox.height &&
-      newY + this.hitbox.height > player.y + player.hitbox.offsetY;
-
-    return movableCollision || playerCollision;
-  }
-
   protected canMove(changeX: number, changeY: number) {
     const x = this.x + changeX + this.hitbox.offsetX;
     const y = this.y + changeY + this.hitbox.offsetY;
     const { width, height } = this.hitbox;
     return (
-      x > 0 && this.state.map.width > x + width && y > 0 && this.state.map.height > y + height && !this.collides(x, y)
+      x > 0 &&
+      this.state.map.width > x + width &&
+      y > 0 &&
+      this.state.map.height > y + height &&
+      !collides({
+        skipEntity: this,
+        hitbox: this.hitbox,
+        state: this.state,
+        x,
+        y,
+      })
     );
   }
 
@@ -158,11 +124,6 @@ export class MovableEntity {
     }
   }
 
-  protected updatePosition() {
-    this.sprite.x = this.virtualX;
-    this.sprite.y = this.virtualY;
-  }
-
   protected updateVisibility() {
     const playerOffsetX = this.state.player.width / 2;
     const playerOffsetY = this.state.player.height / 2;
@@ -179,52 +140,22 @@ export class MovableEntity {
       Math.abs(playerX - selfX) <= this.state.player.initialX + playerOffsetX + selfOffsetX;
   }
 
-  protected async initBase({ app, initialX, initialY, state, hitbox, ...tilesetArgs }: InitEntityArgs) {
-    this.state = state;
-
-    this.x = initialX;
-    this.y = initialY;
-    this.hitbox = hitbox;
-
-    this.spriteSheet = await parseTileset({ ...tilesetArgs });
-    this.width = tilesetArgs.width / tilesetArgs.rowSize;
-    this.height = tilesetArgs.height / tilesetArgs.columnSize;
+  protected async initMovable({ app, initialX, initialY, state, hitbox, ...tilesetArgs }: InitMovableEntityArgs) {
+    await this.initBase({ app, initialX, initialY, state, hitbox, ...tilesetArgs });
 
     this.animation = this.spriteSheet.animations.standingLeft;
     this.animationDuration = tilesetArgs.animationDuration;
 
-    this.sprite = new Sprite(this.animation[0]);
-    this.sprite.x = this.x;
-    this.sprite.y = this.y;
+    this.sprite.texture = this.animation[0];
 
     app.ticker.add(({ deltaMS }) => {
       this.updateMovement();
       if (this.sprite.visible) {
         this.updateAnimation(deltaMS);
-        this.updatePosition();
       }
       this.updateVisibility();
     });
 
     app.stage.addChild(this.sprite);
-  }
-
-  get virtualX() {
-    return this.x - this.state.offsetX;
-  }
-
-  get virtualY() {
-    return this.y - this.state.offsetY;
-  }
-
-  setPosition(x: number, y: number) {
-    if (this.verticalAnimation && this.y !== y) {
-      this.lastDirection = y > this.y ? 'down' : 'up';
-    }
-    if (this.x !== x) {
-      this.lastDirection = x > this.x ? 'right' : 'left';
-    }
-    this.x = x;
-    this.y = y;
   }
 }
