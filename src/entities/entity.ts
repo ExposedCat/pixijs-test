@@ -32,18 +32,20 @@ export type MovableEntityArgs = {
 
 export class MovableEntity {
   protected speed!: number;
-  protected animationDelay!: number;
-  protected verticalAnimation!: boolean;
 
   protected state!: GameState;
 
   protected movement: Movement | null = null;
+  protected lastDirection: 'left' | 'right' | 'up' | 'down' = 'left';
+
+  protected verticalAnimation!: boolean;
+  protected animation!: Texture<TextureSource<any>>[];
+  protected animationDelay!: number;
+  protected animationDuration!: number;
+  protected animationTime = 0;
+  protected textureId = 0;
 
   protected spriteSheet!: Spritesheet<SpritesheetData>;
-
-  protected lastDirection: 'left' | 'right' | 'up' | 'down' = 'left';
-  protected animation!: Texture<TextureSource<any>>[];
-
   sprite!: Sprite;
 
   x = 0;
@@ -58,37 +60,6 @@ export class MovableEntity {
     }
     Object.assign(this, rest);
     this.animationDelay ??= 250;
-  }
-
-  protected updateAnimation() {
-    const action = this.movement?.isMoving() ? 'running' : 'standing';
-    switch (this.lastDirection) {
-      case 'left':
-        this.animation = this.spriteSheet.animations[`${action}Left`];
-        break;
-      case 'right':
-        this.animation = this.spriteSheet.animations[`${action}Right`];
-        break;
-      case 'up':
-        this.animation = this.spriteSheet.animations[`${action}Up`];
-        break;
-      case 'down':
-        this.animation = this.spriteSheet.animations[`${action}Down`];
-        break;
-    }
-  }
-
-  updatePosition() {
-    this.sprite.x = this.virtualX;
-    this.sprite.y = this.virtualY;
-  }
-
-  get virtualX() {
-    return this.x - this.state.offsetX;
-  }
-
-  get virtualY() {
-    return this.y - this.state.offsetY;
   }
 
   protected collides(newX: number, newY: number) {
@@ -121,6 +92,77 @@ export class MovableEntity {
     );
   }
 
+  protected updateAnimation(deltaMS: number) {
+    this.animationDuration += deltaMS;
+    if (this.animationTime > this.animationDelay) {
+      this.animationTime = 0;
+      this.textureId += 1;
+      this.sprite.texture = this.animation[this.textureId % this.animationDuration];
+    }
+    const action = this.movement?.isMoving() ? 'running' : 'standing';
+    switch (this.lastDirection) {
+      case 'left':
+        this.animation = this.spriteSheet.animations[`${action}Left`];
+        break;
+      case 'right':
+        this.animation = this.spriteSheet.animations[`${action}Right`];
+        break;
+      case 'up':
+        this.animation = this.spriteSheet.animations[`${action}Up`];
+        break;
+      case 'down':
+        this.animation = this.spriteSheet.animations[`${action}Down`];
+        break;
+    }
+  }
+
+  protected updateMovement() {
+    if (this.movement) {
+      let deltaX = 0;
+      let deltaY = 0;
+
+      if (this.movement.state.up) {
+        deltaY -= this.speed;
+        if (this.verticalAnimation) this.lastDirection = 'up';
+      } else if (this.movement.state.down) {
+        deltaY += this.speed;
+        if (this.verticalAnimation) this.lastDirection = 'down';
+      }
+      if (this.movement.state.left) {
+        deltaX -= this.speed;
+        this.lastDirection = 'left';
+      } else if (this.movement.state.right) {
+        deltaX += this.speed;
+        this.lastDirection = 'right';
+      }
+
+      if (deltaX !== 0 && deltaY !== 0) {
+        const factor = 1 / Math.sqrt(2);
+        deltaX *= factor;
+        deltaY *= factor;
+      }
+
+      if (deltaX !== 0 || deltaY !== 0) {
+        if (this.canMove(deltaX, deltaY)) {
+          this.x += deltaX;
+          this.y += deltaY;
+        } else {
+          if (deltaX !== 0 && this.canMove(deltaX, 0)) {
+            this.x += deltaX;
+          }
+          if (deltaY !== 0 && this.canMove(0, deltaY)) {
+            this.y += deltaY;
+          }
+        }
+      }
+    }
+  }
+
+  protected updatePosition() {
+    this.sprite.x = this.virtualX;
+    this.sprite.y = this.virtualY;
+  }
+
   protected async initBase({ app, initialX, initialY, state, hitbox, ...tilesetArgs }: InitEntityArgs) {
     this.state = state;
 
@@ -132,66 +174,28 @@ export class MovableEntity {
     this.width = tilesetArgs.width / tilesetArgs.rowSize;
     this.height = tilesetArgs.height / tilesetArgs.columnSize;
 
-    let textureId = 0;
     this.animation = this.spriteSheet.animations.standingLeft;
+    this.animationDuration = tilesetArgs.animationDuration;
 
     this.sprite = new Sprite(this.animation[0]);
     this.sprite.x = this.x;
     this.sprite.y = this.y;
-    app.stage.addChild(this.sprite);
 
-    let elapsed = 0;
     app.ticker.add(({ deltaMS }) => {
-      elapsed += deltaMS;
-      if (elapsed > this.animationDelay) {
-        elapsed = 0;
-        textureId += 1;
-        this.sprite.texture = this.animation[textureId % tilesetArgs.animationDuration];
-      }
-
-      if (this.movement) {
-        let deltaX = 0;
-        let deltaY = 0;
-
-        if (this.movement.state.up) {
-          deltaY -= this.speed;
-          if (this.verticalAnimation) this.lastDirection = 'up';
-        } else if (this.movement.state.down) {
-          deltaY += this.speed;
-          if (this.verticalAnimation) this.lastDirection = 'down';
-        }
-        if (this.movement.state.left) {
-          deltaX -= this.speed;
-          this.lastDirection = 'left';
-        } else if (this.movement.state.right) {
-          deltaX += this.speed;
-          this.lastDirection = 'right';
-        }
-
-        if (deltaX !== 0 && deltaY !== 0) {
-          const factor = 1 / Math.sqrt(2);
-          deltaX *= factor;
-          deltaY *= factor;
-        }
-
-        if (deltaX !== 0 || deltaY !== 0) {
-          if (this.canMove(deltaX, deltaY)) {
-            this.x += deltaX;
-            this.y += deltaY;
-          } else {
-            if (deltaX !== 0 && this.canMove(deltaX, 0)) {
-              this.x += deltaX;
-            }
-            if (deltaY !== 0 && this.canMove(0, deltaY)) {
-              this.y += deltaY;
-            }
-          }
-        }
-      }
-
-      this.updateAnimation();
+      this.updateMovement();
+      this.updateAnimation(deltaMS);
       this.updatePosition();
     });
+
+    app.stage.addChild(this.sprite);
+  }
+
+  get virtualX() {
+    return this.x - this.state.offsetX;
+  }
+
+  get virtualY() {
+    return this.y - this.state.offsetY;
   }
 
   setPosition(x: number, y: number) {

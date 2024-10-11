@@ -49,10 +49,7 @@ export class Character extends MovableEntity {
     );
   }
 
-  setPosition(_x: number, _y: number): void {
-    console.warn(`setPosition should not be called on Character`);
-  }
-  updatePosition() {
+  protected updatePosition() {
     this.onMove(this.x - this.initialX, this.y - this.initialY);
   }
 
@@ -97,5 +94,9 @@ export class Character extends MovableEntity {
     });
 
     this.onMove = onMove ?? (() => {});
+  }
+
+  setPosition(_x: number, _y: number): void {
+    console.warn(`setPosition should not be called on Character`);
   }
 }
