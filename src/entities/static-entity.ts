@@ -15,4 +15,9 @@ export class StaticEntity extends BaseEntity {
 
     app.stage.addChild(this.sprite);
   }
+
+  destroy() {
+    super.destroy();
+    this.state.app.stage.removeChild(this.sprite);
+  }
 }

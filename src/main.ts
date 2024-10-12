@@ -57,4 +57,4 @@ await player.init({
   onMove: state.handleMovement.bind(state),
 });
 
-setInterval(() => createPlant(state), 1_000);
+setInterval(() => createPlant(state), 5);

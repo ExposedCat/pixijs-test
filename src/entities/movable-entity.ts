@@ -1,8 +1,8 @@
 import type { Texture, TextureSource, Application, Renderer } from 'pixi.js';
 
-import { Movement } from '../utils/movement.ts';
-import type { MovementArgs } from '../utils/movement.ts';
 import { collides } from '../utils/geometry.ts';
+import { Controls } from '../utils/controls.ts';
+import type { MovementArgs } from '../utils/controls.ts';
 import { BaseEntity } from './base-entity.ts';
 import type { InitBaseEntityArgs } from './base-entity.ts';
 
@@ -20,7 +20,7 @@ export type MovableEntityArgs = {
 export class MovableEntity extends BaseEntity {
   protected speed!: number;
 
-  protected movement: Movement | null = null;
+  protected controls!: Controls;
   protected lastDirection: 'left' | 'right' | 'up' | 'down' = 'left';
 
   protected verticalAnimation!: boolean;
@@ -30,11 +30,9 @@ export class MovableEntity extends BaseEntity {
   protected animationTime = 0;
   protected textureId = 0;
 
-  constructor({ keys, ...rest }: MovableEntityArgs) {
+  constructor({ keys = {}, ...rest }: MovableEntityArgs) {
     super();
-    if (keys) {
-      this.movement = new Movement(keys);
-    }
+    this.controls = new Controls(keys);
     Object.assign(this, rest);
     this.animationDelay ??= 250;
   }
@@ -65,7 +63,7 @@ export class MovableEntity extends BaseEntity {
       this.textureId += 1;
       this.sprite.texture = this.animation[this.textureId % this.animationDuration];
     }
-    const action = this.movement?.isMoving() ? 'running' : 'standing';
+    const action = this.controls?.isMoving() ? 'running' : 'standing';
     switch (this.lastDirection) {
       case 'left':
         this.animation = this.spriteSheet.animations[`${action}Left`];
@@ -83,21 +81,21 @@ export class MovableEntity extends BaseEntity {
   }
 
   protected updateMovement() {
-    if (this.movement) {
+    if (this.controls) {
       let deltaX = 0;
       let deltaY = 0;
 
-      if (this.movement.state.up) {
+      if (this.controls.movement.up) {
         deltaY -= this.speed;
         if (this.verticalAnimation) this.lastDirection = 'up';
-      } else if (this.movement.state.down) {
+      } else if (this.controls.movement.down) {
         deltaY += this.speed;
         if (this.verticalAnimation) this.lastDirection = 'down';
       }
-      if (this.movement.state.left) {
+      if (this.controls.movement.left) {
         deltaX -= this.speed;
         this.lastDirection = 'left';
-      } else if (this.movement.state.right) {
+      } else if (this.controls.movement.right) {
         deltaX += this.speed;
         this.lastDirection = 'right';
       }

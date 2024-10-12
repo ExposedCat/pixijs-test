@@ -1,11 +1,14 @@
+import { Plant } from './plant.ts';
 import { MovableEntity } from './movable-entity.ts';
 import type { InitMovableEntityArgs } from './movable-entity.ts';
+import type { BaseEntity } from './base-entity.ts';
 
 export type InitCharacterArgs = Pick<InitMovableEntityArgs, 'app' | 'state'> & {
   onMove?: (x: number, y: number) => void;
 };
 
 export class Player extends MovableEntity {
+  private plants = 0;
   private onMove!: (x: number, y: number) => void;
 
   initialX!: number;
@@ -25,15 +28,32 @@ export class Player extends MovableEntity {
     });
   }
 
+  private pickPlant() {
+    const plantIndex = this.state.entities.findIndex(
+      entity =>
+        entity instanceof Plant &&
+        entity.growthLevel === 4 &&
+        this.collidesWithEntity(this.initialX, this.initialY, entity),
+    );
+    if (plantIndex > 0) {
+      const plant = this.state.entities[plantIndex] as Plant;
+      this.state.entities.splice(plantIndex, 1);
+      plant.destroy();
+      this.plants += 1;
+    }
+  }
+
+  private collidesWithEntity(newX: number, newY: number, entity: BaseEntity) {
+    return (
+      newX < entity.virtualX + entity.hitbox.offsetX + entity.hitbox.width &&
+      newX + this.hitbox.width > entity.virtualX + entity.hitbox.offsetX &&
+      newY < entity.virtualY + entity.hitbox.offsetY + entity.hitbox.height &&
+      newY + this.hitbox.height > entity.virtualY + entity.hitbox.offsetY
+    );
+  }
+
   private collides(newX: number, newY: number) {
-    return this.state.entities.some(entity => {
-      return (
-        newX < entity.virtualX + entity.hitbox.offsetX + entity.hitbox.width &&
-        newX + this.hitbox.width > entity.virtualX + entity.hitbox.offsetX &&
-        newY < entity.virtualY + entity.hitbox.offsetY + entity.hitbox.height &&
-        newY + this.hitbox.height > entity.virtualY + entity.hitbox.offsetY
-      );
-    });
+    return this.state.entities.some(entity => this.collidesWithEntity(newX, newY, entity));
   }
 
   protected canMove(changeX: number, changeY: number) {
@@ -97,6 +117,12 @@ export class Player extends MovableEntity {
     });
 
     this.onMove = onMove ?? (() => {});
+
+    this.state.app.ticker.add(() => {
+      if (this.controls.state[' ']) {
+        this.pickPlant();
+      }
+    });
   }
 
   setPosition(_x: number, _y: number): void {

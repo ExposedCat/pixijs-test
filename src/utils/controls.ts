@@ -1,29 +1,30 @@
 export type MovementArgs = Record<string, 'left' | 'right' | 'up' | 'down'>;
 
-export class Movement {
-  state = {
-    left: false,
-    right: false,
-    up: false,
-    down: false,
-  };
+export class Controls {
+  movement: Record<string, boolean> = {};
+  state: Record<string, boolean> = {};
 
   constructor(movementKeys: MovementArgs) {
     document.addEventListener('keydown', event => {
       const direction = movementKeys[event.key];
       if (direction) {
-        this.state[direction] = true;
+        this.movement[direction] = true;
+      } else {
+        this.state[event.key] = true;
       }
     });
+
     document.addEventListener('keyup', event => {
       const direction = movementKeys[event.key];
       if (direction) {
-        this.state[direction] = false;
+        this.movement[direction] = false;
+      } else {
+        this.state[event.key] = false;
       }
     });
   }
 
   isMoving() {
-    return this.state.left || this.state.right || this.state.up || this.state.down;
+    return this.movement.left || this.movement.right || this.movement.up || this.movement.down;
   }
 }

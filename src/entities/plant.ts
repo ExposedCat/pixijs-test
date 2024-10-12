@@ -1,4 +1,4 @@
-import type { TickerCallback } from 'pixi.js';
+import type { Ticker } from 'pixi.js';
 
 import { randomInt } from '../utils/math.ts';
 import { StaticEntity } from './static-entity.ts';
@@ -14,14 +14,12 @@ export class Plant extends StaticEntity {
     this.sprite.texture = this.spriteSheet.animations[`grow${this.growthLevel}`][0];
   }
 
-  private get growthLevel(): number {
-    return this.time > this.growLevelMS * 4
-      ? 4
-      : this.time > this.growLevelMS * 3
-        ? 3
-        : this.time > this.growLevelMS * 2
-          ? 2
-          : 1;
+  private lifeCycle({ deltaMS }: Ticker) {
+    this.time += deltaMS;
+    this.updateGrowth();
+    if (this.growthLevel === 4 || this.hp <= 0) {
+      this.state.app.ticker.remove(this.lifeCycle.bind(this));
+    }
   }
 
   async init(args: InitPlantArgs) {
@@ -33,14 +31,21 @@ export class Plant extends StaticEntity {
       names: ['grow1', 'grow2', 'grow3', 'grow4'],
     });
 
-    const lifeCycle: TickerCallback<any> = ({ deltaMS }) => {
-      this.time += deltaMS;
-      this.updateGrowth();
-      if (this.growthLevel === 4 || this.hp <= 0) {
-        args.app.ticker.remove(lifeCycle);
-      }
+    const lifeCycle = this.lifeCycle.bind(this);
+    this.state.app.ticker.add(lifeCycle);
+    this.destroy = () => {
+      super.destroy();
+      this.state.app.ticker.remove(lifeCycle);
     };
+  }
 
-    args.app.ticker.add(lifeCycle);
+  get growthLevel(): number {
+    return this.time > this.growLevelMS * 4
+      ? 4
+      : this.time > this.growLevelMS * 3
+        ? 3
+        : this.time > this.growLevelMS * 2
+          ? 2
+          : 1;
   }
 }

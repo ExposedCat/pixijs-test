@@ -34,9 +34,17 @@ export class BaseEntity {
   height = 0;
   hitbox!: HitBox;
 
+  destroy() {}
+
   protected updatePosition() {
     this.sprite.x = this.virtualX;
     this.sprite.y = this.virtualY;
+  }
+
+  protected baseLifeCycle() {
+    if (this.sprite.visible) {
+      this.updatePosition();
+    }
   }
 
   async initBase({ app, hp, initialX, initialY, state, hitbox, ...tilesetArgs }: InitBaseEntityArgs) {
@@ -53,11 +61,9 @@ export class BaseEntity {
     this.sprite.x = this.x = initialX;
     this.sprite.y = this.y = initialY;
 
-    app.ticker.add(() => {
-      if (this.sprite.visible) {
-        this.updatePosition();
-      }
-    });
+    const lifeCycle = this.baseLifeCycle.bind(this);
+    app.ticker.add(lifeCycle);
+    this.destroy = () => app.ticker.remove(lifeCycle);
   }
 
   get virtualX() {

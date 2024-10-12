@@ -25,6 +25,7 @@ export async function createPlant(state: GameState) {
   do {
     initialX = randomInt(100, state.map.width - 100);
     initialY = randomInt(100, state.map.height - 100);
+    // FIXME: Collision check doesn't work
   } while (collides({ x: initialX, y: initialY, state, hitbox }));
 
   state.entities.push(carrot);
