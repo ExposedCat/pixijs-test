@@ -1,16 +1,16 @@
-import { GameState } from './entities/state.ts';
-import { Player } from './entities/player.ts';
-import { createPlant } from './entities/generator.ts';
-import { GameMap } from './entities/game-map.ts';
-import { Animal } from './entities/animal.ts';
-import { initPixiApp } from './engine/pixi.ts';
+import { GameState } from './init/state.ts';
+import { initPixi } from './init/engine.ts';
+import { Plant } from './entities/static/plant.ts';
+import { Player } from './entities/movable/player.ts';
+import { Animal } from './entities/movable/animal.ts';
+import { GameMap } from './entities/generic/game-map.ts';
 
 const root = document.querySelector<HTMLDivElement>('#root');
 if (!root) {
   throw new Error('Root element not found');
 }
 
-const app = await initPixiApp({
+const app = await initPixi({
   width: root.clientWidth,
   height: root.clientHeight,
 });
@@ -57,13 +57,13 @@ await player.init({
   onMove: state.handleMovement.bind(state),
 });
 
-setInterval(() => createPlant(state), 5);
+setInterval(() => Plant.create(state), 5);
 
 app.ticker.add(ticker => {
+  map.lifeCycle();
   for (const entity of [...state.entities, state.player]) {
     if (entity.initialized) {
       entity.lifeCycle(ticker);
     }
   }
-  map.lifeCycle();
 });

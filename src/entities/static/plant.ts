@@ -1,10 +1,14 @@
 import type { Ticker } from 'pixi.js';
 
-import { randomInt } from '../utils/math.ts';
+import { collides } from '../../utils/geometry.ts';
+import type { GameState } from '../../init/state.ts';
+import { randomInt } from '../../helpers/math.ts';
 import { StaticEntity } from './static-entity.ts';
 import type { InitStaticEntityArgs } from './static-entity.ts';
 
 export type InitPlantArgs = Omit<InitStaticEntityArgs, 'hp' | 'rowSize' | 'columnSize' | 'names' | 'animationDuration'>;
+
+export const MAX_PLANTS = 30;
 
 export class Plant extends StaticEntity {
   private time = 0;
@@ -44,5 +48,42 @@ export class Plant extends StaticEntity {
         : this.time > this.growLevelMS * 2
           ? 2
           : 1;
+  }
+
+  static async create(state: GameState) {
+    const plants = state.entities.filter(entity => entity instanceof Plant);
+    if (plants.length === MAX_PLANTS) {
+      return null;
+    }
+
+    const carrot = new Plant();
+    let initialX: number;
+    let initialY: number;
+
+    const hitbox = {
+      offsetX: 12,
+      offsetY: 24,
+      height: 20,
+      width: 20,
+    };
+
+    do {
+      initialX = randomInt(100, state.map.width - 100);
+      initialY = randomInt(100, state.map.height - 100);
+      // FIXME: Collision check doesn't work
+    } while (collides({ x: initialX, y: initialY, state, hitbox }));
+
+    state.entities.push(carrot);
+
+    await carrot.init({
+      app: state.app,
+      state,
+      initialX,
+      initialY,
+      fileName: 'carrot',
+      width: 160,
+      height: 48,
+      hitbox,
+    });
   }
 }

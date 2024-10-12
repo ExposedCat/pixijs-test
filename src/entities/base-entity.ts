@@ -1,8 +1,9 @@
 import { Sprite } from 'pixi.js';
 import type { Application, Renderer, Spritesheet, SpritesheetData, Ticker } from 'pixi.js';
 
-import { parseTileset, type ParseTileSheetArgs } from '../engine/tileset.ts';
-import type { GameState } from './state.ts';
+import { parseTileset } from '../utils/tileset.ts';
+import type { ParseTileSheetArgs } from '../utils/tileset.ts';
+import type { GameState } from '../init/state.ts';
 
 export type HitBox = {
   offsetX: number;

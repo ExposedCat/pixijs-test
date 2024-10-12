@@ -5,7 +5,7 @@ export type InitPixiAppArgs = {
   height: number;
 };
 
-export async function initPixiApp({ width, height }: InitPixiAppArgs) {
+export async function initPixi({ width, height }: InitPixiAppArgs) {
   const app = new Application();
 
   await app.init({

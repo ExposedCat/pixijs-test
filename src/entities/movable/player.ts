@@ -1,9 +1,9 @@
 import type { Ticker } from 'pixi.js';
 
-import { Plant } from './plant.ts';
+import { Plant } from '../static/plant.ts';
 import { MovableEntity } from './movable-entity.ts';
 import type { InitMovableEntityArgs } from './movable-entity.ts';
-import type { BaseEntity } from './base-entity.ts';
+import type { BaseEntity } from '../base-entity.ts';
 
 export type InitCharacterArgs = Pick<InitMovableEntityArgs, 'app' | 'state'> & {
   onMove?: (x: number, y: number) => void;

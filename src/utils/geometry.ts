@@ -1,5 +1,5 @@
-import type { GameState } from '../entities/state.ts';
-import type { BaseEntity, HitBox } from '../entities/base-entity.ts';
+import type { GameState } from '../init/state.ts';
+import type { HitBox, BaseEntity } from '../entities/base-entity.ts';
 
 export type CollidesArgs = {
   hitbox: HitBox;

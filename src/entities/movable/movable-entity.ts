@@ -1,10 +1,10 @@
-import type { Texture, TextureSource, Application, Renderer, Ticker } from 'pixi.js';
+import type { Application, Renderer, Texture, TextureSource, Ticker } from 'pixi.js';
 
-import { collides } from '../utils/geometry.ts';
-import { Controls } from '../utils/controls.ts';
-import type { MovementArgs } from '../utils/controls.ts';
-import { BaseEntity } from './base-entity.ts';
-import type { InitBaseEntityArgs } from './base-entity.ts';
+import { BaseEntity } from '../base-entity.ts';
+import type { InitBaseEntityArgs } from '../base-entity.ts';
+import { collides } from '../../utils/geometry.ts';
+import { Controls } from '../../helpers/controls.ts';
+import type { MovementArgs } from '../../helpers/controls.ts';
 
 export type InitMovableEntityArgs = InitBaseEntityArgs & {
   app: Application<Renderer>;

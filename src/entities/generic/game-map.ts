@@ -1,9 +1,9 @@
 import type { Application, Renderer } from 'pixi.js';
 import { CompositeTilemap } from '@pixi/tilemap';
 
-import { randomInt } from '../utils/math.ts';
-import { parseTileset } from '../engine/tileset.ts';
-import type { GameState } from './state.ts';
+import { parseTileset } from '../../utils/tileset.ts';
+import type { GameState } from '../../init/state.ts';
+import { randomInt } from '../../helpers/math.ts';
 
 export type CreateMapArgs = {
   app: Application<Renderer>;

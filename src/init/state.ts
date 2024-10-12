@@ -1,8 +1,8 @@
 import type { Application, Renderer } from 'pixi.js';
 
-import type { Player } from './player.ts';
-import type { GameMap } from './game-map.ts';
-import type { BaseEntity } from './base-entity.ts';
+import type { Player } from '../entities/movable/player.ts';
+import type { GameMap } from '../entities/generic/game-map.ts';
+import type { BaseEntity } from '../entities/base-entity.ts';
 
 export type GameStateArgs = {
   app: Application<Renderer>;
