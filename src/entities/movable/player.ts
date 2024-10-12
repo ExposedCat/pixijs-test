@@ -1,6 +1,7 @@
 import type { Ticker } from 'pixi.js';
 
 import { Plant } from '../static/plant.ts';
+import { Text } from '../generic/text.ts';
 import { MovableEntity } from './movable-entity.ts';
 import type { InitMovableEntityArgs } from './movable-entity.ts';
 import type { BaseEntity } from '../base-entity.ts';
@@ -13,6 +14,8 @@ export type InitCharacterArgs = Pick<InitMovableEntityArgs, 'app' | 'state'> & {
 export class Player extends MovableEntity {
   private plants = 0;
   private onMove!: (x: number, y: number) => void;
+
+  private scoreLabel!: Text;
 
   initialX!: number;
   initialY!: number;
@@ -31,6 +34,11 @@ export class Player extends MovableEntity {
     });
   }
 
+  private updateScore(change: number) {
+    this.plants += change;
+    this.scoreLabel.text = `Score: ${this.plants}`;
+  }
+
   private pickPlant() {
     const plantIndex = this.state.entities.findIndex(
       entity => entity instanceof Plant && entity.growthLevel === 4 && distance({ from: this, to: entity }) < 50,
@@ -39,7 +47,7 @@ export class Player extends MovableEntity {
       const plant = this.state.entities[plantIndex] as Plant;
       this.state.entities.splice(plantIndex, 1);
       plant.destroy();
-      this.plants += 1;
+      this.updateScore(1);
     }
   }
 
@@ -115,6 +123,10 @@ export class Player extends MovableEntity {
         height: 12,
       },
     });
+
+    this.scoreLabel = new Text({ x: 10, y: 10 });
+    this.state.app.stage.addChild(this.scoreLabel);
+    this.updateScore(0);
 
     this.onMove = onMove ?? (() => {});
     this.initialized = true;
