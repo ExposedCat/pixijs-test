@@ -57,7 +57,7 @@ await player.init({
   onMove: state.handleMovement.bind(state),
 });
 
-setInterval(() => Plant.create(state), 5);
+setTimeout(() => Plant.create(state), 3_000);
 
 app.ticker.add(ticker => {
   map.lifeCycle();

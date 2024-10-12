@@ -29,3 +29,18 @@ export function collides({ x, y, hitbox, state, skipEntity }: CollidesArgs) {
 
   return movableCollision || playerCollision;
 }
+
+export type DistanceArgs = {
+  from: BaseEntity;
+  to: BaseEntity;
+  fromX?: number;
+  fromY?: number;
+};
+
+export function distance({ from, to, fromX, fromY }: DistanceArgs) {
+  const x = (fromX ?? from.x) + from.width / 2;
+  const y = (fromY ?? from.y) + from.height / 2;
+  const toX = to.x + to.width / 2;
+  const toY = to.x + to.height / 2;
+  return Math.sqrt(Math.pow(toX - x, 2) + Math.pow(toY - y, 2));
+}

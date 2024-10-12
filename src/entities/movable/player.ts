@@ -4,6 +4,7 @@ import { Plant } from '../static/plant.ts';
 import { MovableEntity } from './movable-entity.ts';
 import type { InitMovableEntityArgs } from './movable-entity.ts';
 import type { BaseEntity } from '../base-entity.ts';
+import { distance } from '../../utils/geometry.ts';
 
 export type InitCharacterArgs = Pick<InitMovableEntityArgs, 'app' | 'state'> & {
   onMove?: (x: number, y: number) => void;
@@ -32,10 +33,7 @@ export class Player extends MovableEntity {
 
   private pickPlant() {
     const plantIndex = this.state.entities.findIndex(
-      entity =>
-        entity instanceof Plant &&
-        entity.growthLevel === 4 &&
-        this.collidesWithEntity(this.initialX, this.initialY, entity),
+      entity => entity instanceof Plant && entity.growthLevel === 4 && distance({ from: this, to: entity }) < 50,
     );
     if (plantIndex > 0) {
       const plant = this.state.entities[plantIndex] as Plant;
