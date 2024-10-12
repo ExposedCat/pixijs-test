@@ -1,5 +1,5 @@
 import { Sprite } from 'pixi.js';
-import type { Application, Renderer, Spritesheet, SpritesheetData } from 'pixi.js';
+import type { Application, Renderer, Spritesheet, SpritesheetData, Ticker } from 'pixi.js';
 
 import { parseTileset, type ParseTileSheetArgs } from '../engine/tileset.ts';
 import type { GameState } from './state.ts';
@@ -21,6 +21,8 @@ export type InitBaseEntityArgs = ParseTileSheetArgs & {
 };
 
 export class BaseEntity {
+  alive: boolean = true;
+  initialized: boolean = false;
   hp!: number;
 
   protected state!: GameState;
@@ -34,17 +36,9 @@ export class BaseEntity {
   height = 0;
   hitbox!: HitBox;
 
-  destroy() {}
-
   protected updatePosition() {
     this.sprite.x = this.virtualX;
     this.sprite.y = this.virtualY;
-  }
-
-  protected baseLifeCycle() {
-    if (this.sprite.visible) {
-      this.updatePosition();
-    }
   }
 
   async initBase({ app, hp, initialX, initialY, state, hitbox, ...tilesetArgs }: InitBaseEntityArgs) {
@@ -60,10 +54,12 @@ export class BaseEntity {
     this.sprite = new Sprite(this.spriteSheet.animations[tilesetArgs.names[0]][0]);
     this.sprite.x = this.x = initialX;
     this.sprite.y = this.y = initialY;
+  }
 
-    const lifeCycle = this.baseLifeCycle.bind(this);
-    app.ticker.add(lifeCycle);
-    this.destroy = () => app.ticker.remove(lifeCycle);
+  lifeCycle(_ticker: Ticker) {
+    if (this.sprite.visible) {
+      this.updatePosition();
+    }
   }
 
   get virtualX() {
@@ -83,5 +79,10 @@ export class BaseEntity {
   setPosition(x: number, y: number) {
     this.x = x;
     this.y = y;
+  }
+
+  destroy() {
+    this.initialized = false;
+    this.sprite.destroy();
   }
 }

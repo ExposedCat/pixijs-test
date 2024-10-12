@@ -37,7 +37,9 @@ export class GameState {
 
     let index = 1;
     for (const entity of newList) {
-      this.app.stage.setChildIndex(entity.sprite, index++);
+      if (entity.initialized) {
+        this.app.stage.setChildIndex(entity.sprite, index++);
+      }
     }
   }
 }

@@ -22,7 +22,7 @@ export class Animal extends MovableEntity {
   }
 
   async init(args: InitAnimalArgs) {
-    return this.initMovable({
+    await this.initMovable({
       ...args,
       hp: 30,
       rowSize: 4,
@@ -30,5 +30,6 @@ export class Animal extends MovableEntity {
       names: ['standingLeft', 'standingRight', 'runningLeft', 'runningRight'],
       animationDuration: 2,
     });
+    this.initialized = true;
   }
 }

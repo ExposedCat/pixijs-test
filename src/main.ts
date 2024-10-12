@@ -58,3 +58,12 @@ await player.init({
 });
 
 setInterval(() => createPlant(state), 5);
+
+app.ticker.add(ticker => {
+  for (const entity of [...state.entities, state.player]) {
+    if (entity.initialized) {
+      entity.lifeCycle(ticker);
+    }
+  }
+  map.lifeCycle();
+});

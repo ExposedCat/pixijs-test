@@ -1,3 +1,5 @@
+import type { Ticker } from 'pixi.js';
+
 import { Plant } from './plant.ts';
 import { MovableEntity } from './movable-entity.ts';
 import type { InitMovableEntityArgs } from './movable-entity.ts';
@@ -117,12 +119,14 @@ export class Player extends MovableEntity {
     });
 
     this.onMove = onMove ?? (() => {});
+    this.initialized = true;
+  }
 
-    this.state.app.ticker.add(() => {
-      if (this.controls.state[' ']) {
-        this.pickPlant();
-      }
-    });
+  lifeCycle(ticker: Ticker) {
+    super.lifeCycle(ticker);
+    if (this.controls.state[' ']) {
+      this.pickPlant();
+    }
   }
 
   setPosition(_x: number, _y: number): void {

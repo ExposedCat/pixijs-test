@@ -14,6 +14,7 @@ export type CreateMapArgs = {
 
 export class GameMap {
   private tilemap!: CompositeTilemap;
+  private state!: GameState;
 
   width: number = 0;
   height: number = 0;
@@ -21,6 +22,7 @@ export class GameMap {
   async init({ width, height, app, state }: CreateMapArgs) {
     this.width = width;
     this.height = height;
+    this.state = state;
 
     const tileset = await parseTileset({
       fileName: 'background',
@@ -50,12 +52,14 @@ export class GameMap {
       }
     }
 
-    app.ticker.add(() => this.move(state.offsetX, state.offsetY));
-
     app.stage.addChild(this.tilemap);
   }
 
   move(x: number, y: number) {
     this.tilemap.pivot.set(x, y);
+  }
+
+  lifeCycle() {
+    this.move(this.state.offsetX, this.state.offsetY);
   }
 }

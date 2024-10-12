@@ -1,4 +1,4 @@
-import type { Texture, TextureSource, Application, Renderer } from 'pixi.js';
+import type { Texture, TextureSource, Application, Renderer, Ticker } from 'pixi.js';
 
 import { collides } from '../utils/geometry.ts';
 import { Controls } from '../utils/controls.ts';
@@ -146,14 +146,15 @@ export class MovableEntity extends BaseEntity {
 
     this.sprite.texture = this.animation[0];
 
-    app.ticker.add(({ deltaMS }) => {
-      this.updateMovement();
-      if (this.sprite.visible) {
-        this.updateAnimation(deltaMS);
-      }
-      this.updateVisibility();
-    });
-
     app.stage.addChild(this.sprite);
+  }
+
+  lifeCycle(ticker: Ticker) {
+    super.lifeCycle(ticker);
+    this.updateMovement();
+    if (this.sprite.visible) {
+      this.updateAnimation(ticker.deltaMS);
+    }
+    this.updateVisibility();
   }
 }
